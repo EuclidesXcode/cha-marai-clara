@@ -1,5 +1,14 @@
 import mongoose from 'mongoose';
 
+// Definição do tipo para o global
+declare global {
+  namespace NodeJS {
+    interface Global {
+      mongoose: { conn: typeof mongoose | null, promise: Promise<typeof mongoose> | null };
+    }
+  }
+}
+
 const MONGODB_URI = process.env.MONGODB_URI as string;
 
 if (!MONGODB_URI) {
@@ -20,7 +29,7 @@ async function connectMongo() {
   }
 
   if (!cached.promise) {
-    const opts = {
+    const opts: mongoose.ConnectOptions = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     };
