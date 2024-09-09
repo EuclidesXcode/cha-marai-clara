@@ -1,205 +1,103 @@
-import { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import { useState } from 'react';
 import ReactModal from 'react-modal';
-import Image from 'next/image';
 import axios from 'axios';
+import Image from 'next/image';
+import styled from 'styled-components';
 
-interface NumberButtonProps {
-  selected: boolean;
-  disabled?: boolean;
-}
+ReactModal.setAppElement('#__next'); // Para acessibilidade
 
 const Container = styled.div`
-  max-width: 800px;
-  margin: 0 auto;
-  text-align: center;
   padding: 30px;
-
-  @media (max-width: 768px) {
-    padding: 20px;
-  }
 `;
 
 const Title = styled.h1`
-  font-size: 24px;
-  margin-bottom: 20px;
-
-  @media (max-width: 768px) {
-    font-size: 20px;
-  }
+  text-align: center;
 `;
 
 const TotalArrecadado = styled.h2`
-  font-size: 20px;
-  color: #3498db;
-  margin-bottom: 20px;
+  text-align: center;
+`;
 
-  @media (max-width: 768px) {
-    font-size: 18px;
-  }
+const Input = styled.input`
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
 `;
 
 const ButtonGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
   gap: 10px;
-  margin-top: 20px;
-  padding: 30px;
-
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(5, 1fr);
-    padding: 20px;
-    gap: 8px;
-  }
-
-  @media (max-width: 480px) {
-    grid-template-columns: repeat(4, 1fr);
-    padding: 10px;
-    gap: 5px;
-  }
+  margin: 20px 0;
 `;
 
-const NumberButton = styled.button<NumberButtonProps>`
-  padding: 10px 15px;
-  background-color: transparent;
-  border: 2px solid ${({ selected }) => (selected ? '#e74c3c' : '#2ecc71')};
-  color: ${({ selected }) => (selected ? '#e74c3c' : '#2ecc71')};
-  border-radius: 10px;
-  font-size: 16px;
-  cursor: pointer;
-
-  &:disabled {
-    border-color: #e74c3c;
-    color: #e74c3c;
-    cursor: not-allowed;
-  }
-
-  @media (max-width: 768px) {
-    padding: 8px 12px;
-    font-size: 14px;
-  }
-
-  @media (max-width: 480px) {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-`;
-
-const Input = styled.input`
+const NumberButton = styled.button<{ selected: boolean }>`
+  width: 100%;
   padding: 10px;
-  font-size: 16px;
+  border: 2px solid ${(props) => (props.selected ? 'red' : 'green')};
+  background: transparent;
+  color: ${(props) => (props.selected ? 'red' : 'green')};
   border-radius: 5px;
-  border: 1px solid #ccc;
-  margin-bottom: 20px;
-
-  @media (max-width: 768px) {
-    padding: 8px;
-    font-size: 14px;
-  }
+  cursor: pointer;
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
   justify-content: center;
   gap: 20px;
-  margin-top: 20px;
-  flex-direction: column;
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    gap: 10px;
-  }
 `;
 
 const DoarButton = styled.button`
   padding: 10px 20px;
   background-color: #3498db;
-  color: white;
+  color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 16px;
-
-  @media (max-width: 768px) {
-    padding: 8px 16px;
-    font-size: 14px;
-  }
 `;
 
 const FinalizarButton = styled.button`
   padding: 10px 20px;
-  background-color: #e74c3c;
-  color: white;
+  background-color: #2ecc71;
+  color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 16px;
-
-  @media (max-width: 768px) {
-    padding: 8px 16px;
-    font-size: 14px;
-  }
 `;
 
 const QRCodeImageContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
-
-  @media (max-width: 768px) {
-    margin-top: 15px;
-  }
-
-  @media (max-width: 480px) {
-    margin-top: 10px;
-  }
+  text-align: center;
 `;
 
 const InfoText = styled.p`
-  color: #555;
-  font-size: 14px;
-  margin-top: 10px;
   text-align: center;
-
-  @media (max-width: 768px) {
-    font-size: 12px;
-  }
+  margin-top: 10px;
 `;
 
-ReactModal.setAppElement('#__next');
+const CopyButton = styled.button`
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  background-color: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+`;
 
 export default function Home() {
-  const [nome, setNome] = useState<string>('');
+  const [nome, setNome] = useState('');
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
-  const [totalArrecadado, setTotalArrecadado] = useState<number>(0);
   const [numerosDisponiveis, setNumerosDisponiveis] = useState<boolean[]>(Array(101).fill(false));
-  const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);  // Modal para doação e rifa
-  const [modalType, setModalType] = useState<'doacao' | 'rifa' | null>(null);  // Tipo de modal aberto
+  const [totalArrecadado, setTotalArrecadado] = useState(0);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [modalType, setModalType] = useState<'doacao' | 'finalizar' | null>(null);
   const [doacaoValor, setDoacaoValor] = useState<number | null>(null);
 
-  useEffect(() => {
-    // Buscar números comprados ao iniciar
-    const fetchComprados = async () => {
-      try {
-        const response = await axios.get('/api/getRifa');
-        const numerosComprados: number[] = response.data;
-        setNumerosDisponiveis((prev) => {
-          const updated = [...prev];
-          numerosComprados.forEach((numero) => {
-            updated[numero] = true;
-          });
-          return updated;
-        });
-      } catch (error) {
-        console.error('Erro ao buscar números comprados:', error);
-      }
-    };
+  const qrCodeLink = '00020126450014BR.GOV.BCB.PIX0123euclideslione@gmail.com5204000053039865802BR5925Euclides Rufo Silva do Na6009SAO PAULO62140510a4R8CcgKFr630425E7';
 
-    fetchComprados();
-  }, []);
-
-  const openModal = (type: 'doacao' | 'rifa') => {
+  const openModal = (type: 'doacao' | 'finalizar') => {
     setModalType(type);
     setModalIsOpen(true);
   };
@@ -228,10 +126,7 @@ export default function Home() {
 
     try {
       await axios.post('/api/saveRifa', { nome, numeros: selectedNumbers });
-      alert('Rifa finalizada com sucesso!');
-      setSelectedNumbers([]);
-      setTotalArrecadado(0);
-      setNumerosDisponiveis(Array(101).fill(false));
+      openModal('finalizar');
     } catch (error) {
       console.error('Erro ao finalizar rifa:', error);
     }
@@ -242,15 +137,21 @@ export default function Home() {
     try {
       // Aqui você pode implementar o código para processar a doação
       // Exibindo o QR Code e o aviso
-      setModalType('rifa');
+      setModalType('doacao');
+      setModalIsOpen(true);
     } catch (error) {
       console.error('Erro ao processar doação:', error);
     }
   };
 
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(qrCodeLink);
+    alert('Link copiado para a área de transferência!');
+  };
+
   return (
     <Container>
-      <Title>Chá Digital da Maria Clara</Title>
+      <Title color='#F038F9'>Chá Digital da Maria Clara</Title>
       <TotalArrecadado>Total arrecadado: R$ {totalArrecadado}</TotalArrecadado>
       <Input
         type="text"
@@ -288,32 +189,38 @@ export default function Home() {
         }}
       >
         <h2>Doação Voluntária</h2>
+        <QRCodeImageContainer>
+          <Image src="/assets/image/qr-code-img.jpg" alt="QR Code" width={200} height={200} />
+        </QRCodeImageContainer>
+        <InfoText>
+          Obrigado por participar!
+        </InfoText>
         <Input
           type="number"
           value={doacaoValor || ''}
           onChange={(e) => setDoacaoValor(Number(e.target.value))}
           placeholder="Informe o valor da doação"
         />
-        <ButtonGroup>
-          <DoarButton onClick={handleDoacao}>Concluir Doação</DoarButton>
-          <button
-            onClick={closeModal}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#e74c3c',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              marginTop: '10px',
-            }}
-          >
-            Fechar
-          </button>
-        </ButtonGroup>
+        <CopyButton onClick={copyToClipboard}>
+          Copiar Link para Pagamento
+        </CopyButton>
+        <button
+          onClick={closeModal}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#e74c3c',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            marginTop: '20px',
+          }}
+        >
+          Fechar
+        </button>
       </ReactModal>
       <ReactModal
-        isOpen={modalIsOpen && modalType === 'rifa'}
+        isOpen={modalIsOpen && modalType === 'finalizar'}
         onRequestClose={closeModal}
         style={{
           content: {
@@ -328,8 +235,11 @@ export default function Home() {
           <Image src="/assets/image/qr-code-img.jpg" alt="QR Code" width={200} height={200} />
         </QRCodeImageContainer>
         <InfoText>
-          Por favor informe os números selecionados para validação, pode informar diretamente no pix ou no WhatsApp (44) 9 9114-4705
+          Obrigado por participar, para melhor validação, escreva no pix os números comprados, ou me envie por WhatsApp (44) 9 9114-4705
         </InfoText>
+        <CopyButton onClick={copyToClipboard}>
+          Copiar Link para Pagamento
+        </CopyButton>
         <button
           onClick={closeModal}
           style={{
@@ -342,7 +252,7 @@ export default function Home() {
             marginTop: '20px',
           }}
         >
-          Finalizar Pagamento
+          Fechar
         </button>
       </ReactModal>
     </Container>
