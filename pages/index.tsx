@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ReactModal from 'react-modal';
 import axios from 'axios';
 import Image from 'next/image';
@@ -35,9 +35,9 @@ const ButtonGrid = styled.div`
 const NumberButton = styled.button<{ selected: boolean }>`
   width: 100%;
   padding: 10px;
-  border: 2px solid ${(props) => (props.selected ? 'red' : 'green')};
-  background: transparent;
-  color: ${(props) => (props.selected ? 'red' : 'green')};
+  border: 2px solid ${(props) => (props.selected ? '#F038F9' : 'green')};
+  background: ${(props) => (props.selected ? '#F038F9' : 'transparent')};
+  color: ${(props) => (props.selected ? '#fff' : 'green')};
   border-radius: 5px;
   cursor: pointer;
 `;
@@ -86,6 +86,13 @@ const CopyButton = styled.button`
   cursor: pointer;
 `;
 
+const ModalButtonGroup = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
+`;
+
 export default function Home() {
   const [nome, setNome] = useState('');
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
@@ -94,6 +101,25 @@ export default function Home() {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalType, setModalType] = useState<'doacao' | 'finalizar' | null>(null);
   const [doacaoValor, setDoacaoValor] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Fetch already selected numbers from the server on component mount
+    const fetchSelectedNumbers = async () => {
+      try {
+        const response = await axios.get('/api/getSelectedNumbers');
+        const { numbers } = response.data;
+        setSelectedNumbers(numbers);
+        const updatedDisponiveis = Array(101).fill(false);
+        numbers.forEach(num => updatedDisponiveis[num] = true);
+        setNumerosDisponiveis(updatedDisponiveis);
+        setTotalArrecadado(numbers.length * 50);
+      } catch (error) {
+        console.error('Erro ao buscar números selecionados:', error);
+      }
+    };
+
+    fetchSelectedNumbers();
+  }, []);
 
   const qrCodeLink = '00020126450014BR.GOV.BCB.PIX0123euclideslione@gmail.com5204000053039865802BR5925Euclides Rufo Silva do Na6009SAO PAULO62140510a4R8CcgKFr630425E7';
 
@@ -132,15 +158,15 @@ export default function Home() {
     }
   };
 
-  // const handleDoacao = async () => {
-  //   if (!doacaoValor) return;
-  //   try {
-  //     setModalType('doacao');
-  //     setModalIsOpen(true);
-  //   } catch (error) {
-  //     console.error('Erro ao processar doação:', error);
-  //   }
-  // };
+  const handleDoacao = async () => {
+    if (!doacaoValor) return;
+    try {
+      // Process donation logic here if needed
+      openModal('doacao');
+    } catch (error) {
+      console.error('Erro ao processar doação:', error);
+    }
+  };
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(qrCodeLink);
@@ -173,7 +199,7 @@ export default function Home() {
         {selectedNumbers.length > 0 && (
           <FinalizarButton onClick={handleFinalizar}>Finalizar Rifa</FinalizarButton>
         )}
-        <DoarButton onClick={() => openModal('doacao')}>Doação Voluntária</DoarButton>
+        <DoarButton onClick={handleDoacao}>Doação Voluntária</DoarButton>
       </ButtonGroup>
       <ReactModal
         isOpen={modalIsOpen && modalType === 'doacao'}
@@ -188,7 +214,7 @@ export default function Home() {
       >
         <h2>Doação Voluntária</h2>
         <QRCodeImageContainer>
-          <Image src="/qr-code-img.jpg" alt="QR Code" width={200} height={200} />
+          <Image src="/assets/image/qr-code-img.jpg" alt="QR Code" width={200} height={200} />
         </QRCodeImageContainer>
         <InfoText>
           Obrigado por participar!
@@ -202,20 +228,22 @@ export default function Home() {
         <CopyButton onClick={copyToClipboard}>
           Copiar Link para Pagamento
         </CopyButton>
-        <button
-          onClick={closeModal}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#e74c3c',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            marginTop: '20px',
-          }}
-        >
-          Fechar
-        </button>
+        <ModalButtonGroup>
+          <FinalizarButton onClick={handleFinalizar}>Finalizar</FinalizarButton>
+          <button
+            onClick={closeModal}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#e74c3c',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+            }}
+          >
+            Fechar
+          </button>
+        </ModalButtonGroup>
       </ReactModal>
       <ReactModal
         isOpen={modalIsOpen && modalType === 'finalizar'}
