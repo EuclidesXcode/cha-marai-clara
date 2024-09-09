@@ -132,17 +132,15 @@ export default function Home() {
     }
   };
 
-  const handleDoacao = async () => {
-    if (!doacaoValor) return;
-    try {
-      // Aqui você pode implementar o código para processar a doação
-      // Exibindo o QR Code e o aviso
-      setModalType('doacao');
-      setModalIsOpen(true);
-    } catch (error) {
-      console.error('Erro ao processar doação:', error);
-    }
-  };
+  // const handleDoacao = async () => {
+  //   if (!doacaoValor) return;
+  //   try {
+  //     setModalType('doacao');
+  //     setModalIsOpen(true);
+  //   } catch (error) {
+  //     console.error('Erro ao processar doação:', error);
+  //   }
+  // };
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(qrCodeLink);
