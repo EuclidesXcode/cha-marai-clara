@@ -103,21 +103,20 @@ export default function Home() {
   const [doacaoValor, setDoacaoValor] = useState<number | null>(null);
 
   useEffect(() => {
-    // Fetch already selected numbers from the server on component mount
     const fetchSelectedNumbers = async () => {
       try {
         const response = await axios.get('/api/getSelectedNumbers');
-        const { numbers } = response.data;
+        const { numbers }: { numbers: number[] } = response.data; // Especificando o tipo de 'numbers'
         setSelectedNumbers(numbers);
         const updatedDisponiveis = Array(101).fill(false);
-        numbers.forEach(num => updatedDisponiveis[num] = true);
+        numbers.forEach((num: number) => updatedDisponiveis[num] = true); // Adicionando o tipo para 'num'
         setNumerosDisponiveis(updatedDisponiveis);
         setTotalArrecadado(numbers.length * 50);
       } catch (error) {
         console.error('Erro ao buscar números selecionados:', error);
       }
     };
-
+  
     fetchSelectedNumbers();
   }, []);
 
