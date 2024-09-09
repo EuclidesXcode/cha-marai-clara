@@ -1,4 +1,7 @@
-module.exports = {
-    reactStrictMode: true,
-    swcMinify: true,
-  };
+// next.config.mjs
+import { defineConfig } from 'next';
+
+export default defineConfig({
+  reactStrictMode: true,
+  swcMinify: true,
+});
