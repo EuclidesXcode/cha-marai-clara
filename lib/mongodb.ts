@@ -26,12 +26,7 @@ async function connectMongo() {
   }
 
   if (!globalCache.promise) {
-    const opts: mongoose.ConnectOptions = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    };
-
-    globalCache.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+    globalCache.promise = mongoose.connect(MONGODB_URI).then((mongoose) => {
       return mongoose;
     });
   }
