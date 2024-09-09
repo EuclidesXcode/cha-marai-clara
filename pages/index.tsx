@@ -188,7 +188,7 @@ export default function Home() {
       >
         <h2>Doação Voluntária</h2>
         <QRCodeImageContainer>
-          <Image src="/assets/image/qr-code-img.jpg" alt="QR Code" width={200} height={200} />
+          <Image src="/qr-code-img.jpg" alt="QR Code" width={200} height={200} />
         </QRCodeImageContainer>
         <InfoText>
           Obrigado por participar!
