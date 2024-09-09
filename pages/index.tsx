@@ -4,7 +4,7 @@ import axios from 'axios';
 import Image from 'next/image';
 import styled from 'styled-components';
 
-ReactModal.setAppElement('#__next'); // Para acessibilidade
+ReactModal.setAppElement('#__next');
 
 const Container = styled.div`
   padding: 30px;
@@ -95,28 +95,32 @@ const ModalButtonGroup = styled.div`
 
 export default function Home() {
   const [nome, setNome] = useState('');
-  const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
-  const [numerosDisponiveis, setNumerosDisponiveis] = useState<boolean[]>(Array(101).fill(false));
-  const [totalArrecadado, setTotalArrecadado] = useState(0);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalType, setModalType] = useState<'doacao' | 'finalizar' | null>(null);
   const [doacaoValor, setDoacaoValor] = useState<number | null>(null);
+  const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
+  const [numerosDisponiveis, setNumerosDisponiveis] = useState<boolean[]>(Array(101).fill(false));
+  const [totalArrecadado, setTotalArrecadado] = useState(0);
 
   useEffect(() => {
     const fetchSelectedNumbers = async () => {
       try {
-        const response = await axios.get('/api/getSelectedNumbers');
-        const { numbers }: { numbers: number[] } = response.data; // Especificando o tipo de 'numbers'
-        setSelectedNumbers(numbers);
+        const response = await axios.get('/api/getRifas');
+        const num: number[] = response.data;
+
+        setSelectedNumbers(num);
+
         const updatedDisponiveis = Array(101).fill(false);
-        numbers.forEach((num: number) => updatedDisponiveis[num] = true); // Adicionando o tipo para 'num'
+        num.forEach((n) => updatedDisponiveis[n] = true);
+
         setNumerosDisponiveis(updatedDisponiveis);
-        setTotalArrecadado(numbers.length * 50);
+        setTotalArrecadado(num.length * 50);
+
       } catch (error) {
         console.error('Erro ao buscar números selecionados:', error);
       }
     };
-  
+
     fetchSelectedNumbers();
   }, []);
 
@@ -150,7 +154,9 @@ export default function Home() {
     }
 
     try {
-      await axios.post('/api/saveRifa', { nome, numeros: selectedNumbers });
+      const result = await axios.post('/api/saveRifa', { nome, numeros: selectedNumbers });
+
+      console.log("SALVOU: ", result)
       openModal('finalizar');
     } catch (error) {
       console.error('Erro ao finalizar rifa:', error);
@@ -160,7 +166,6 @@ export default function Home() {
   const handleDoacao = async () => {
     if (!doacaoValor) return;
     try {
-      // Process donation logic here if needed
       openModal('doacao');
     } catch (error) {
       console.error('Erro ao processar doação:', error);
@@ -174,7 +179,7 @@ export default function Home() {
 
   return (
     <Container>
-      <Title color='#F038F9'>Chá Digital da Maria Clara</Title>
+      <Title style={{color: '#F038F9'}}>Chá Digital da Maria Clara</Title>
       <TotalArrecadado>Total arrecadado: R$ {totalArrecadado}</TotalArrecadado>
       <Input
         type="text"

@@ -7,6 +7,6 @@ const rifaSchema = new Schema({
   numeros: { type: [Number], required: true },
 });
 
-const Rifa = mongoose.models.Rifa || mongoose.model('Rifa', rifaSchema);
+const Rifa = mongoose.models.Rifa || mongoose.model('rifas', rifaSchema);
 
 export default Rifa;
