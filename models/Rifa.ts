@@ -1,15 +1,12 @@
-import mongoose, { Document, Model, Schema } from 'mongoose';
+import mongoose from 'mongoose';
 
-interface IRifa extends Document {
-  nome: string;
-  numeroSelecionado: number;
-}
+const { Schema } = mongoose;
 
-const RifaSchema: Schema = new Schema({
+const rifaSchema = new Schema({
   nome: { type: String, required: true },
-  numeroSelecionado: { type: Number, required: true },
+  numeros: { type: [Number], required: true },
 });
 
-const Rifa: Model<IRifa> = mongoose.models.Rifa || mongoose.model<IRifa>('Rifa', RifaSchema);
+const Rifa = mongoose.models.Rifa || mongoose.model('Rifa', rifaSchema);
 
 export default Rifa;

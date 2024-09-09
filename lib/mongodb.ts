@@ -1,14 +1,5 @@
 import mongoose from 'mongoose';
 
-// Definição do tipo para o global
-declare global {
-  namespace NodeJS {
-    interface Global {
-      mongoose: { conn: typeof mongoose | null, promise: Promise<typeof mongoose> | null };
-    }
-  }
-}
-
 const MONGODB_URI = process.env.MONGODB_URI as string;
 
 if (!MONGODB_URI) {
@@ -17,10 +8,10 @@ if (!MONGODB_URI) {
   );
 }
 
-let cached = global.mongoose as { conn: typeof mongoose | null, promise: Promise<typeof mongoose> | null };
+let cached = globalThis.mongoose as { conn: typeof mongoose | null; promise: Promise<typeof mongoose> | null };
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  cached = globalThis.mongoose = { conn: null, promise: null };
 }
 
 async function connectMongo() {
@@ -38,6 +29,7 @@ async function connectMongo() {
       return mongoose;
     });
   }
+
   cached.conn = await cached.promise;
   return cached.conn;
 }

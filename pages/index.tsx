@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import ReactModal from 'react-modal';
 import Image from 'next/image';
+import axios from 'axios';
 
 interface NumberButtonProps {
   selected: boolean;
@@ -46,13 +47,13 @@ const ButtonGrid = styled.div`
   padding: 30px;
 
   @media (max-width: 768px) {
-    grid-template-columns: repeat(5, 1fr); /* Reduz o número de botões por linha */
+    grid-template-columns: repeat(5, 1fr);
     padding: 20px;
     gap: 8px;
   }
 
   @media (max-width: 480px) {
-    grid-template-columns: repeat(4, 1fr); /* Ainda mais compactado para telas menores */
+    grid-template-columns: repeat(4, 1fr);
     padding: 10px;
     gap: 5px;
   }
@@ -177,6 +178,27 @@ export default function Home() {
   const [modalType, setModalType] = useState<'doacao' | 'rifa' | null>(null);  // Tipo de modal aberto
   const [doacaoValor, setDoacaoValor] = useState<number | null>(null);
 
+  useEffect(() => {
+    // Buscar números comprados ao iniciar
+    const fetchComprados = async () => {
+      try {
+        const response = await axios.get('/api/getRifa');
+        const numerosComprados: number[] = response.data;
+        setNumerosDisponiveis((prev) => {
+          const updated = [...prev];
+          numerosComprados.forEach((numero) => {
+            updated[numero] = true;
+          });
+          return updated;
+        });
+      } catch (error) {
+        console.error('Erro ao buscar números comprados:', error);
+      }
+    };
+
+    fetchComprados();
+  }, []);
+
   const openModal = (type: 'doacao' | 'rifa') => {
     setModalType(type);
     setModalIsOpen(true);
@@ -184,134 +206,144 @@ export default function Home() {
 
   const closeModal = () => {
     setModalIsOpen(false);
-    setDoacaoValor(null);  // Reseta o valor da doação
+    setModalType(null);
   };
 
-  const handleDoacaoSubmit = () => {
-    if (doacaoValor) {
-      closeModal();
-    } else {
-      alert('Por favor, insira um valor válido.');
+  const handleNumberClick = (numero: number) => {
+    if (numerosDisponiveis[numero]) return;
+    setSelectedNumbers((prev) => [...prev, numero]);
+    setNumerosDisponiveis((prev) => {
+      const updated = [...prev];
+      updated[numero] = true;
+      return updated;
+    });
+    setTotalArrecadado((prev) => prev + 50);
+  };
+
+  const handleFinalizar = async () => {
+    if (nome.trim() === '' || selectedNumbers.length === 0) {
+      alert('Por favor, informe seu nome e selecione pelo menos um número.');
+      return;
+    }
+
+    try {
+      await axios.post('/api/saveRifa', { nome, numeros: selectedNumbers });
+      alert('Rifa finalizada com sucesso!');
+      setSelectedNumbers([]);
+      setTotalArrecadado(0);
+      setNumerosDisponiveis(Array(101).fill(false));
+    } catch (error) {
+      console.error('Erro ao finalizar rifa:', error);
     }
   };
 
-  const handleNumberClick = (number: number) => {
-    if (!numerosDisponiveis[number]) {
-      setSelectedNumbers([...selectedNumbers, number]);
-      setNumerosDisponiveis((prev) => {
-        const updated = [...prev];
-        updated[number] = true;
-        return updated;
-      });
-      setTotalArrecadado(totalArrecadado + 50);  // Cada número custa 50 reais
+  const handleDoacao = async () => {
+    if (!doacaoValor) return;
+    try {
+      // Aqui você pode implementar o código para processar a doação
+      // Exibindo o QR Code e o aviso
+      setModalType('rifa');
+    } catch (error) {
+      console.error('Erro ao processar doação:', error);
     }
   };
 
   return (
     <Container>
-      <Title>Obrigado por participar do Chá Digital da Maria Clara!</Title>
+      <Title>Chá Digital da Maria Clara</Title>
       <TotalArrecadado>Total arrecadado: R$ {totalArrecadado}</TotalArrecadado>
-
       <Input
         type="text"
-        placeholder="Digite seu nome"
         value={nome}
         onChange={(e) => setNome(e.target.value)}
+        placeholder="Seu nome"
       />
-
       <ButtonGrid>
-        {Array.from({ length: 101 }, (_, i) => (
+        {numerosDisponiveis.map((isAvailable, index) => (
           <NumberButton
-            key={i}
-            selected={numerosDisponiveis[i]}
-            onClick={() => handleNumberClick(i)}
-            disabled={numerosDisponiveis[i]}
+            key={index}
+            selected={isAvailable}
+            onClick={() => handleNumberClick(index)}
+            disabled={isAvailable}
           >
-            {i}
+            {index}
           </NumberButton>
         ))}
       </ButtonGrid>
-
       <ButtonGroup>
-        <DoarButton onClick={() => openModal('doacao')}>Doação Voluntária</DoarButton>
-
         {selectedNumbers.length > 0 && (
-          <FinalizarButton onClick={() => openModal('rifa')}>Finalizar Rifa</FinalizarButton>
+          <FinalizarButton onClick={handleFinalizar}>Finalizar Rifa</FinalizarButton>
         )}
+        <DoarButton onClick={() => openModal('doacao')}>Doação Voluntária</DoarButton>
       </ButtonGroup>
-
       <ReactModal
-        isOpen={modalIsOpen}
+        isOpen={modalIsOpen && modalType === 'doacao'}
         onRequestClose={closeModal}
         style={{
           content: {
-            padding: '40px',
             maxWidth: '500px',
             margin: 'auto',
-            textAlign: 'center'
-          }
+            padding: '20px',
+          },
         }}
       >
-        {modalType === 'doacao' ? (
-          <>
-            <h2>Digite o valor da doação</h2>
-            <input
-              type="number"
-              placeholder="Digite o valor"
-              value={doacaoValor || ''}
-              onChange={(e) => setDoacaoValor(Number(e.target.value))}
-              style={{
-                padding: '10px',
-                fontSize: '16px',
-                marginBottom: '20px',
-                borderRadius: '5px',
-                border: '1px solid #ccc'
-              }}
-            />
-            <button
-              onClick={handleDoacaoSubmit}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#3498db',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-              }}
-            >
-              Confirmar Doação
-            </button>
-          </>
-        ) : (
-          <>
-            <h2>Pagamento da Rifa</h2>
-            <QRCodeImageContainer>
-              <Image
-                src="/assets/image/qr-code-img.jpg"
-                alt="QR Code para pagamento"
-                width={200}
-                height={200}
-              />
-            </QRCodeImageContainer>
-            <InfoText>
-              Por favor informe os números selecionados para validação, pode informar diretamente no pix ou no WhatsApp (44) 9 9114-4705.
-            </InfoText>
-            <button
-              onClick={closeModal}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#e74c3c',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                marginTop: '20px',
-              }}
-            >
-              Finalizar Pagamento
-            </button>
-          </>
-        )}
+        <h2>Doação Voluntária</h2>
+        <Input
+          type="number"
+          value={doacaoValor || ''}
+          onChange={(e) => setDoacaoValor(Number(e.target.value))}
+          placeholder="Informe o valor da doação"
+        />
+        <ButtonGroup>
+          <DoarButton onClick={handleDoacao}>Concluir Doação</DoarButton>
+          <button
+            onClick={closeModal}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#e74c3c',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              marginTop: '10px',
+            }}
+          >
+            Fechar
+          </button>
+        </ButtonGroup>
+      </ReactModal>
+      <ReactModal
+        isOpen={modalIsOpen && modalType === 'rifa'}
+        onRequestClose={closeModal}
+        style={{
+          content: {
+            maxWidth: '500px',
+            margin: 'auto',
+            padding: '20px',
+          },
+        }}
+      >
+        <h2>QR Code para Pagamento</h2>
+        <QRCodeImageContainer>
+          <Image src="/assets/image/qr-code-img.jpg" alt="QR Code" width={200} height={200} />
+        </QRCodeImageContainer>
+        <InfoText>
+          Por favor informe os números selecionados para validação, pode informar diretamente no pix ou no WhatsApp (44) 9 9114-4705
+        </InfoText>
+        <button
+          onClick={closeModal}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#e74c3c',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            marginTop: '20px',
+          }}
+        >
+          Finalizar Pagamento
+        </button>
       </ReactModal>
     </Container>
   );
