@@ -4,17 +4,15 @@ const MONGODB_URI = process.env.MONGODB_URI as string;
 
 if (!MONGODB_URI) {
   throw new Error(
-    'Por favor, defina a variável de ambiente MONGODB_URI no arquivo .env.local'
+    'Error: não foi encontrado a variavel de ambiente MONGODB_URI'
   );
 }
 
-// Crie uma interface para armazenar a conexão e a promessa de conexão
 interface MongooseCache {
   conn: Mongoose | null;
   promise: Promise<Mongoose> | null;
 }
 
-// Use um objeto global para armazenar a conexão e a promessa
 const globalCache: MongooseCache = {
   conn: null,
   promise: null,

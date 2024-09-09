@@ -31,9 +31,8 @@ export default function Home() {
     fetchSelectedNumbers();
   }, []);
 
-  const qrCodeLink =
-    '00020126450014BR.GOV.BCB.PIX0123euclideslione@gmail.com5204000053039865802BR5925Euclides Rufo Silva do Na6009SAO PAULO62140510a4R8CcgKFr630425E7';
-
+  const qrCodeLink = process.env.URL_PIX as string;
+  
   const openModal = (type: 'doacao' | 'finalizar') => {
     setModalType(type);
     setModalIsOpen(true);
