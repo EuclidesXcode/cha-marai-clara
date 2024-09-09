@@ -32,7 +32,7 @@ export default function Home() {
   }, []);
 
   const qrCodeLink = process.env.URL_PIX as string;
-  
+
   const openModal = (type: 'doacao' | 'finalizar') => {
     setModalType(type);
     setModalIsOpen(true);
@@ -91,6 +91,9 @@ export default function Home() {
     <Container>
       <Typography variant="h4" align="center" sx={{ color: '#F038F9' }} gutterBottom>
         Chá Digital da Maria Clara
+      </Typography>
+      <Typography align="center">
+      Participe da nossa rifa e concorra a R$300 via PIX! O sorteio será realizado no dia 10 de janeiro de 2025. Agradecemos de coração a todos que contribuírem com o chá de bebê da nossa pequena Maria Clara!
       </Typography>
       <Typography variant="h6" align="center">
         Total arrecadado: R$ {totalArrecadado}
