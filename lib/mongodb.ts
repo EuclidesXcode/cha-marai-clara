@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { Mongoose } from 'mongoose';
 
 const MONGODB_URI = process.env.MONGODB_URI as string;
 
@@ -8,30 +8,36 @@ if (!MONGODB_URI) {
   );
 }
 
-let cached = globalThis.mongoose as { conn: typeof mongoose | null; promise: Promise<typeof mongoose> | null };
-
-if (!cached) {
-  cached = globalThis.mongoose = { conn: null, promise: null };
+// Crie uma interface para armazenar a conexão e a promessa de conexão
+interface MongooseCache {
+  conn: Mongoose | null;
+  promise: Promise<Mongoose> | null;
 }
 
+// Use um objeto global para armazenar a conexão e a promessa
+const globalCache: MongooseCache = {
+  conn: null,
+  promise: null,
+};
+
 async function connectMongo() {
-  if (cached.conn) {
-    return cached.conn;
+  if (globalCache.conn) {
+    return globalCache.conn;
   }
 
-  if (!cached.promise) {
+  if (!globalCache.promise) {
     const opts: mongoose.ConnectOptions = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+    globalCache.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
       return mongoose;
     });
   }
 
-  cached.conn = await cached.promise;
-  return cached.conn;
+  globalCache.conn = await globalCache.promise;
+  return globalCache.conn;
 }
 
 export default connectMongo;
